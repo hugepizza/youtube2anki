@@ -12,8 +12,8 @@ function inject() {
   document.body.appendChild(elem)
 }
 // switch caption on
-const cc = document.querySelector(".ytp-subtitles-button") as HTMLButtonElement
-cc.click()
+// const cc = document.querySelector(".ytp-subtitles-button") as HTMLButtonElement
+// cc.click()
 
 // observer video progress
 const observer = new MutationObserver((mutations) => {
@@ -42,23 +42,29 @@ observer.observe(document.querySelector(".ytp-time-current") as Node, obConfig)
 chrome.runtime.sendMessage({
   action: "videoTitle",
   data: document
-    .querySelector("head > meta:nth-child(56)")
+    .querySelector("head meta[name='title']")
     .getAttribute("content")
 })
 
 inject()
 
-// get caption file url
-setTimeout(() => {
-  const container = document.querySelector("#subsUrl")
-  console.log(123)
-
-  if (container) {
-    console.log("content sent", container.getAttribute("data-sub-url"))
-
-    chrome.runtime.sendMessage({
-      action: "captionsUrl",
-      data: container.getAttribute("data-sub-url")
-    })
-  }
-}, 2000)
+window.addEventListener(
+  "message",
+  (e) => {
+    if (e.data.action === "captionUrl") {
+      console.log("get captionUrl", e.data.data)
+      chrome.runtime.sendMessage({
+        action: "captionsUrl",
+        data: e.data.data
+      })
+    } else if (e.data.action === "duration")
+      if (e.data.data) {
+        chrome.runtime.sendMessage({
+          action: "timeChange",
+          data: e.data.data as number
+        })
+        console.log("get duration", e.data.data)
+      }
+  },
+  false
+)

@@ -7,7 +7,6 @@ import { atomWithStorage } from "jotai/utils"
 
 import { addNote } from "~actions/card"
 import { deckNames } from "~actions/deck"
-import { parseXML } from "~kits"
 
 export const deckAtom = atomWithStorage("desk", "", window.localStorage, {
   getOnInit: true
@@ -118,9 +117,7 @@ function IndexPopup() {
         setInfo={setInfo}
         info={info}
       />
-      <div className="text-gray-500 text-sm">
-        * select text then click buttom Add
-      </div>
+      <div className="text-gray-500 text-sm">*select text then click SAVE</div>
       <div className="fixed bottom-2 right-2">
         <>{info}</>
       </div>
