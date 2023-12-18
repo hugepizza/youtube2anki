@@ -7,7 +7,7 @@
     ".plasmo/index.d.ts",
     "./**/*.ts",
     "./**/*.tsx"
-  ],
+, "src/js/inject.js"  ],
   "compilerOptions": {
     "paths": {
       "~*": [

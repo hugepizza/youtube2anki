@@ -10,6 +10,10 @@
     "package": "plasmo package"
   },
   "dependencies": {
+    "@plasmohq/messaging": "^0.6.1",
+    "@plasmohq/storage": "^1.9.0",
+    "immer": "^10.0.3",
+    "jotai": "^2.6.0",
     "plasmo": "0.84.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
@@ -21,11 +25,23 @@
     "@types/node": "20.9.0",
     "@types/react": "18.2.37",
     "@types/react-dom": "18.2.15",
+    "daisyui": "^4.4.20",
     "postcss": "8.4.31",
     "prettier": "3.0.3",
     "typescript": "5.2.2"
   },
   "manifest": {
+    "web_accessible_resources": [
+      {
+        "resources": [
+          "assets/y.js",
+          "assets/sub-url.js"
+        ],
+        "matches": [
+          "https://www.youtube.com/*"
+        ]
+      }
+    ],
     "host_permissions": [
       "https://*/*"
     ]
