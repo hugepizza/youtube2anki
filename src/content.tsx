@@ -1,4 +1,5 @@
 import cssText from "data-text:~style.css"
+import { atomWithStorage } from "jotai/utils"
 import type { PlasmoCSConfig } from "plasmo"
 
 import { CountButton } from "~features/count-button"

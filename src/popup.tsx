@@ -1,103 +1,76 @@
-import { useEffect, useRef, useState } from "react"
-
-import { Storage } from "@plasmohq/storage"
-import { useStorage } from "@plasmohq/storage/hook"
+import { useEffect, useState } from "react"
 
 import "./style.css"
 
-import { atom, useAtom } from "jotai"
+import { useAtom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 
 import { addNote } from "~actions/card"
 import { deckNames } from "~actions/deck"
+import { parseXML } from "~kits"
 
-function parseXML(xmlString: string) {
-  const parser = new DOMParser()
-  const xmlDoc = parser.parseFromString(xmlString, "text/xml")
-  const texts = Array.from(xmlDoc.getElementsByTagName("text"))
-  const captions = texts.map((text) => ({
-    start: parseInt(text.getAttribute("start"), 10),
-    duration: text.getAttribute("dur"),
-    content: text.textContent.replaceAll("&#39;", "'")
-  }))
-  console.log("captions", captions)
+export const deckAtom = atomWithStorage("desk", "", window.localStorage, {
+  getOnInit: true
+})
 
-  return captions
-}
-type caption = {
+export const tagAtom = atomWithStorage("tag", "", window.localStorage, {
+  getOnInit: true
+})
+
+export type caption = {
   start: number
   duration: string
   content: string
 }
 function IndexPopup() {
-  const [decks, setDesks] = useState<string[]>([])
-  const [currentDeck, setCurrentDeck] = useState("")
-  const [videoTitle, setVideoTitle] = useState("111")
-  const [tag, setTag] = useState<string[]>([])
-  const [processing, setProcessing] = useState(false)
-  const [selected, setselected] = useState("")
-  const [info, setInfo] = useState("")
-  const [time, setTime] = useState(1379)
-  const [captionData, setCaptionData] = useState<caption[]>([])
+  const [currentDeck, setCurrentDeck] = useAtom(deckAtom)
+  const [tag, setTag] = useAtom(tagAtom)
 
+  const [captionData, setCaptionData] = useState<caption[]>([])
+  const [time, setTime] = useState(0)
+  const [title, setTitle] = useState("")
+
+  const [decks, setDesks] = useState<string[]>([])
+  const [selected, setselected] = useState("")
+  const [info, setInfo] = useState("caption file not found")
   useEffect(() => {
-    chrome.runtime.onMessage.addListener(async (e) => {
-      if (e.action === "captionsUrlPopup") {
-        console.log("pop get ", e.data)
-        const url = e.data as string
-        if (!url.startsWith("https://")) {
-          setInfo(
-            "get caption url failed, make sure one caption is set, " + url
-          )
-          return
-        }
-        console.log("set local")
-        localStorage.setItem("captionUrl", url)
-      }
+    chrome.runtime.sendMessage({ action: "getState" }, function (response) {
+      var state = response.state
+      console.log("Popup received message state:", state)
+      setTime(state.videoTime)
+      setTitle(state.videoTitle)
+      setCaptionData(state.captionData)
+      setInfo("caption file mounted")
     })
   }, [])
 
   useEffect(() => {
-    const captionUrl = localStorage.getItem("captionUrl")
-    console.log("captionUrl", captionUrl)
-    if (captionUrl) {
-      fetch(captionUrl, { method: "GET" })
-        .then((resp) => resp.text())
-        .then((xmlString) => parseXML(xmlString))
-        .then((texts) => {
-          console.log("sssss")
-          console.log(
-            texts.filter((e) => e.start > time - 5 && e.start < time + 5)
-          )
-
-          setCaptionData(
-            texts.filter((e) => e.start > time - 5 && e.start < time + 5)
-          )
-          setInfo("caption file is mounted")
-        })
-    }
-  }, [])
-
-  useEffect(() => {
+    console.log("currentDeck", currentDeck)
     deckNames().then((resp) => {
       setDesks(resp.result)
       if (resp.result.length > 0) {
-        setCurrentDeck(resp.result[0])
+        if (!currentDeck) {
+          setCurrentDeck(resp.result[0])
+        } else if (resp.result.findIndex((n) => currentDeck === n) < 0) {
+          setCurrentDeck(resp.result[0])
+        } else {
+          setCurrentDeck(currentDeck)
+        }
       }
     })
   }, [])
 
   const getSelectedText = () => {
+    CaptionLines
     let text = ""
     if (window.getSelection) {
-      text = window.getSelection().toString()
+      let text = window.getSelection().toString()
+      setselected(text)
     } else if (
       document.getSelection() &&
       document.getSelection().type !== "Control"
-    ) {
-      text = document.getSelection().toString()
-    }
-    return text
+    )
+      return text
   }
 
   const handleMouseUp = () => {
@@ -110,17 +83,13 @@ function IndexPopup() {
 
   return (
     <div
-      className="w-[600px] h-[400px] p-4  text-base  select-none"
+      className="w-[600px] h-[400px] p-4  text-base  "
       onMouseUp={handleMouseUp}>
       <h1>
-        <span className="text-base-400">current video</span> {videoTitle}
+        <span className="text-primary">{title}</span>
       </h1>
-      <p className="text-base-400 text-sm">
-        * video title will be set in tag list, or you can{" "}
-        <a className="underline">customize tags</a>
-      </p>
-      {/* <p>tag1 tag2</p> */}
-      <h1 className="text-lg">save to</h1>
+
+      <h1 className="text-lg">choose a deck</h1>
       <ol>
         {decks.map((ele) => (
           <li key={ele}>
@@ -133,24 +102,22 @@ function IndexPopup() {
           </li>
         ))}
       </ol>
+      <p className="text-base-400 text-sm">
+        <input
+          className="input input-sm input-bordered"
+          placeholder="set a tag"
+          value={tag}
+          onChange={(e) => setTag(e.currentTarget.value.trim())}
+        />
+      </p>
       <CaptionLines captions={captionData} />
       <SaveButton
+        tags={[tag]}
         deck={currentDeck}
         text={selected}
         setInfo={setInfo}
         info={info}
       />
-      {/* <button
-        className={`btn btn-primary btn-sm`}
-        onClick={() => {
-          addNote(currentDeck, selected, {
-            tags: ["title"]
-          }).then(() => {
-            setInfo("saved to anki")
-          })
-        }}>
-        Add
-      </button> */}
       <div className="text-gray-500 text-sm">
         * select text then click buttom Add
       </div>
@@ -167,12 +134,15 @@ function CaptionLines({ captions }: { captions: caption[] }) {
   }
   return (
     <div className="flex flex-col w-full space-y-1 bg-secondary p-2 rounded-lg my-2">
+      {Math.floor(captions[0].start / 60).toFixed(0)}
+      {":"}
+      {(captions[0].start % 60).toString().padStart(2, "0")}
+      {"~"}
+      {Math.floor(captions[captions.length - 1].start / 60).toFixed(0)}
+      {":"}
+      {(captions[captions.length - 1].start % 60).toString().padStart(2, "0")}
       {captions.map((e) => (
-        <div className="flex flex-row w-full space-x-1">
-          <div className="w-12 text-gray-500">
-            {(e.start / 60).toFixed(0)}:
-            {(e.start % 60).toString().padStart(2, "0")}
-          </div>
+        <div key={e.start} className="flex flex-row w-full space-x-1">
           <div className="select-text">{e.content}</div>
         </div>
       ))}
@@ -202,7 +172,7 @@ function SaveButton({
           let err = false
           try {
             await addNote(deck, text, {
-              tags: ["title"]
+              tags
             })
             setInfo("saved!")
           } catch (error) {
@@ -224,3 +194,22 @@ function SaveButton({
 }
 
 export default IndexPopup
+
+function findNearestCaptions(
+  captions: caption[],
+  targetStart: number
+): caption[] {
+  const sortedCaptions = captions.sort((a, b) => a.start - b.start)
+  let targetIndex = sortedCaptions.findIndex(
+    (caption) => caption.start >= targetStart
+  )
+
+  if (targetIndex === -1) {
+    targetIndex = sortedCaptions.length - 1
+  }
+
+  const startIdx = Math.max(0, targetIndex - 5)
+  const endIdx = Math.min(sortedCaptions.length - 1, targetIndex + 5)
+
+  return sortedCaptions.slice(startIdx, endIdx + 1)
+}
