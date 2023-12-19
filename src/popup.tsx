@@ -5,8 +5,10 @@ import "./style.css"
 import { useAtom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 
+import { ping } from "~actions/_index"
 import { addNote } from "~actions/card"
 import { deckNames } from "~actions/deck"
+import type { caption } from "~types"
 
 export const deckAtom = atomWithStorage("desk", "", window.localStorage, {
   getOnInit: true
@@ -16,11 +18,6 @@ export const tagAtom = atomWithStorage("tag", "", window.localStorage, {
   getOnInit: true
 })
 
-export type caption = {
-  start: number
-  duration: string
-  content: string
-}
 function IndexPopup() {
   const [currentDeck, setCurrentDeck] = useAtom(deckAtom)
   const [tag, setTag] = useAtom(tagAtom)
@@ -32,31 +29,41 @@ function IndexPopup() {
   const [decks, setDesks] = useState<string[]>([])
   const [selected, setselected] = useState("")
   const [info, setInfo] = useState("caption file not found")
-  useEffect(() => {
-    chrome.runtime.sendMessage({ action: "getState" }, function (response) {
-      var state = response.state
-      console.log("Popup received message state:", state)
-      setTime(state.videoTime)
-      setTitle(state.videoTitle)
-      setCaptionData(state.captionData)
-      setInfo("caption file mounted")
-    })
-  }, [])
 
   useEffect(() => {
-    console.log("currentDeck", currentDeck)
-    deckNames().then((resp) => {
-      setDesks(resp.result)
-      if (resp.result.length > 0) {
-        if (!currentDeck) {
-          setCurrentDeck(resp.result[0])
-        } else if (resp.result.findIndex((n) => currentDeck === n) < 0) {
-          setCurrentDeck(resp.result[0])
-        } else {
-          setCurrentDeck(currentDeck)
+    let pingSuccess = false
+    ping()
+      .then(() => (pingSuccess = true))
+      .catch((err) => setInfo("anki connect port not found on localhost:8765"))
+      .finally(() => {
+        console.log("pingSuccess", pingSuccess)
+
+        if (pingSuccess) {
+          deckNames().then((resp) => {
+            setDesks(resp.result)
+            if (resp.result.length > 0) {
+              if (!currentDeck) {
+                setCurrentDeck(resp.result[0])
+              } else if (resp.result.findIndex((n) => currentDeck === n) < 0) {
+                setCurrentDeck(resp.result[0])
+              } else {
+                setCurrentDeck(currentDeck)
+              }
+            }
+          })
+          chrome.runtime.sendMessage(
+            { action: "getState" },
+            function (response) {
+              var state = response.state
+              console.log("Popup received message state:", state)
+              setTime(state.videoTime)
+              setTitle(state.videoTitle)
+              setCaptionData(state.captionData)
+              setInfo("caption file mounted")
+            }
+          )
         }
-      }
-    })
+      })
   }, [])
 
   const getSelectedText = () => {
@@ -87,7 +94,6 @@ function IndexPopup() {
       <h1>
         <span className="text-primary">{title}</span>
       </h1>
-
       <h1 className="text-lg">choose a deck</h1>
       <ol>
         {decks.map((ele) => (

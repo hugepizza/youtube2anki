@@ -1,5 +1,5 @@
 import { parseXML } from "~kits"
-import type { caption } from "~popup"
+import type { caption } from "~types"
 
 export {}
 
