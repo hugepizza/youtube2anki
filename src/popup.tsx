@@ -5,6 +5,7 @@ import { useAtom } from "jotai"
 import About from "~components/About"
 import Home from "~components/Home"
 import { Menu, menuActiveAtom } from "~components/Menu"
+import Setting from "~components/Setting"
 
 function IndexPopup() {
   const [menuActive] = useAtom(menuActiveAtom)
@@ -13,7 +14,7 @@ function IndexPopup() {
       <Menu />
       <div className="flex flex-grow w-full">
         {menuActive === "home" && <Home />}
-        {/* {menuActive === "setting" && <Setting />} */}
+        {menuActive === "setting" && <Setting />}
         {menuActive === "about" && <About />}
       </div>
     </div>

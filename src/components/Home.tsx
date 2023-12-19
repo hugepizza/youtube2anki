@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import { ping } from "~actions/_index"
 import { addNote } from "~actions/card"
 import { deckNames } from "~actions/deck"
+import useGPT from "~hooks/useGPT"
 import type { caption } from "~types"
 
 export const deckAtom = atomWithStorage("desk", "", window.localStorage, {
@@ -35,8 +36,6 @@ export default function Home() {
   }
 
   useEffect(() => {
-    console.log("ue")
-
     let pingSuccess = false
     ping()
       .then(() => (pingSuccess = true))
@@ -73,7 +72,6 @@ export default function Home() {
   }, [forceUpdate])
 
   const getSelectedText = () => {
-    CaptionLines
     let text = ""
     if (window.getSelection) {
       let text = window.getSelection().toString()
@@ -192,15 +190,22 @@ function SaveButton({
   setInfo: (e: string) => void
   tags?: string[]
 }) {
+  const { generateBack } = useGPT()
+  const [requesting, setRequesting] = useState(false)
   return (
     <div className="flex flex-row">
       <button
-        className={`btn btn-primary btn-sm`}
+        className={`btn btn-primary btn-sm ${requesting ? "btn-disabled" : ""}`}
         onClick={async () => {
+          if (text.trim() === "") {
+            return
+          }
+          setRequesting(true)
           const prevInfo = info
           let err = false
           try {
-            await addNote(deck, text, {
+            const back = await generateBack(text)
+            await addNote(deck, text, back, {
               tags
             })
             setInfo("saved!")
@@ -208,6 +213,7 @@ function SaveButton({
             err = true
             setInfo("error occured," + error)
           } finally {
+            setRequesting(false)
             setTimeout(
               () => {
                 setInfo(prevInfo)

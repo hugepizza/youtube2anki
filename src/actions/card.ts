@@ -36,16 +36,9 @@ export async function guiAddCards(
           modelName: "Basic",
           fields: {
             Front: text,
-            Back: "123"
+            Back: text
           },
           tags: options.tags
-          //   picture: [
-          //     {
-          //       url: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/EU-Romania.svg/285px-EU-Romania.svg.png",
-          //       filename: "romania.png",
-          //       fields: ["Extra"]
-          //     }
-          //   ]
         }
       }
     })
@@ -59,6 +52,7 @@ export async function guiAddCards(
 export async function addNote(
   deck: string,
   text: string,
+  back: string,
   options?: { tags: string[] }
 ) {
   return await fetch(baseUrl, {
@@ -73,7 +67,7 @@ export async function addNote(
           modelName: "Basic",
           fields: {
             Front: text,
-            Back: text
+            Back: back
           },
           options: {
             allowDuplicate: false,
