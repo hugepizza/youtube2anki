@@ -23,29 +23,41 @@ export default function Home() {
   const [tag, setTag] = useAtom(tagAtom)
 
   const [captionData, setCaptionData] = useState<caption[]>([])
-  const [time, setTime] = useState(0)
+  const [, setTime] = useState(0)
   const [title, setTitle] = useState("")
 
-  const [decks, setDesks] = useState<string[]>([])
+  const [decks, setDecks] = useState<string[]>([])
   const [selected, setselected] = useState("")
   const [info, setInfo] = useState("caption file not found")
 
+  const [loading, setLoading] = useState(false)
+  const [ankiEnable, setAnkiEnable] = useState(false)
+
   const [forceUpdate, setForceUpdate] = useState(false)
-  const handleForceUpdate = () => {
-    setForceUpdate((prevState) => !prevState)
+  const handleForceUpdate = async () => {
+    setLoading(true)
+    await refresh()
+    setTimeout(() => {
+      setForceUpdate((prevState) => !prevState)
+      setLoading(false)
+    }, 5000)
   }
 
   useEffect(() => {
     let pingSuccess = false
     ping()
-      .then(() => (pingSuccess = true))
-      .catch((err) => setInfo("anki connect port not found on localhost:8765"))
+      .then(() => {
+        pingSuccess = true
+        setAnkiEnable(true)
+      })
+      .catch((err) => {
+        setAnkiEnable(false)
+      })
       .finally(() => {
         console.log("pingSuccess", pingSuccess)
-
         if (pingSuccess) {
           deckNames().then((resp) => {
-            setDesks(resp.result)
+            setDecks(resp.result)
             if (resp.result.length > 0) {
               if (!currentDeck) {
                 setCurrentDeck(resp.result[0])
@@ -90,25 +102,53 @@ export default function Home() {
       setselected(text)
     }
   }
+  if (loading) {
+    return (
+      <div className="w-full flex flex-col items-center justify-center">
+        <span className=" items-center loading loading-dots loading-lg"></span>
+        <span>Loading the currently playing video...</span>
+        <span className="text-sm text">
+          If subtitles and title are not consistent, attempt to reopen the
+          plugin popup.
+        </span>
+      </div>
+    )
+  }
+  if (!ankiEnable) {
+    return (
+      <div className="w-full flex flex-col items-center justify-center">
+        <span>Anki-Connect Add-on is not working on localhost:8765</span>
+        <a
+          href="https://foosoft.net/projects/anki-connect/"
+          target="_blank"
+          className="link-primary text-sm">
+          What is Anki-Connect Add-on?
+        </a>
+      </div>
+    )
+  }
   return (
     <div className="w-full p-4" onMouseUp={handleMouseUp}>
-      <div className="flex flex-row items-center space-x-1">
+      <div className="flex flex-row items-center space-x-1 justify-between">
         <span className="text-primary text-2xl">{title}</span>
-        <button className="btn btn-circle btn-xs" onClick={handleForceUpdate}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-            className="w-4 h-4">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
-            />
-          </svg>
-        </button>
+        <div className="flex flex-col items-center">
+          <button className="btn btn-circle btn-sm" onClick={handleForceUpdate}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-6 h-6">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
+              />
+            </svg>
+          </button>
+          <span className="text-sm">{"reload"}</span>
+        </div>
       </div>
       <div className="flex flex-row w-full space-x-1">
         <div className="w-1/2">
@@ -128,7 +168,7 @@ export default function Home() {
             <input
               className="input input-sm input-bordered"
               placeholder="set a tag"
-              value={tag}
+              value={tag || ""}
               onChange={(e) => setTag(e.currentTarget.value.trim())}
             />
           </p>
@@ -226,4 +266,14 @@ function SaveButton({
       </button>
     </div>
   )
+}
+
+async function refresh() {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
+  chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    func: () => {
+      window.location.reload()
+    }
+  })
 }
