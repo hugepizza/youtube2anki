@@ -1,7 +1,7 @@
 {
   "name": "youtube2anki",
   "displayName": "Youtube2anki",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "An extension to synchronize youtube subtitle to Anki",
   "author": "lei",
   "scripts": {

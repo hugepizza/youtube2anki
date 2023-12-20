@@ -44,7 +44,7 @@ export default function useGPT() {
   const prompt = useAtomValue(openAIPromptAtom)
   const enable = useAtomValue(openAIEnable)
   const generateBack = async (front: string) => {
-    if (enable === "") {
+    if (!enable || enable === "") {
       return front
     }
     const client = new OpenAI({

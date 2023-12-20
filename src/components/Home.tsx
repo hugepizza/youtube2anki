@@ -1,4 +1,4 @@
-import { useAtom } from "jotai"
+import { useAtom, useAtomValue } from "jotai"
 import { atomWithStorage } from "jotai/utils"
 import { useEffect, useState } from "react"
 
@@ -177,7 +177,6 @@ export default function Home() {
       <CaptionLines captions={captionData} />
       <div className="flex flex-row space-x-1 items-end">
         <SaveButton
-          tags={[tag]}
           deck={currentDeck}
           text={selected}
           setInfo={setInfo}
@@ -220,7 +219,6 @@ function CaptionLines({ captions }: { captions: caption[] }) {
 function SaveButton({
   deck,
   text,
-  tags,
   info,
   setInfo
 }: {
@@ -228,9 +226,9 @@ function SaveButton({
   text: string
   info: string
   setInfo: (e: string) => void
-  tags?: string[]
 }) {
   const { generateBack } = useGPT()
+  const tag = useAtomValue(tagAtom)
   const [requesting, setRequesting] = useState(false)
   return (
     <div className="flex flex-row">
@@ -245,9 +243,12 @@ function SaveButton({
           let err = false
           try {
             const back = await generateBack(text)
-            await addNote(deck, text, back, {
-              tags
-            })
+            await addNote(
+              deck,
+              text,
+              back,
+              tag && tag.trim() != "" ? { tags: [tag] } : undefined
+            )
             setInfo("saved!")
           } catch (error) {
             err = true

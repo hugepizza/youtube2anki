@@ -13,7 +13,7 @@ function IndexPopup() {
     <div className="w-[600px] max-w-[600px] flex flex-row text-base">
       <Menu />
       <div className="flex flex-grow w-full">
-        {menuActive === "home" && <Home />}
+        {(!menuActive || menuActive === "home") && <Home />}
         {menuActive === "setting" && <Setting />}
         {menuActive === "about" && <About />}
       </div>

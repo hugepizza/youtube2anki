@@ -78,7 +78,7 @@ export async function addNote(
               checkAllModels: false
             }
           },
-          tags: options?.tags
+          tags: options?.tags || []
         }
       }
     })

@@ -80,7 +80,11 @@ export function Menu() {
         {menuItems.map((ele) => (
           <li key={ele.id}>
             <a
-              className={menuActive === ele.id ? "focus" : ""}
+              className={
+                (menuActive === null ? "home" : menuActive) === ele.id
+                  ? "focus"
+                  : ""
+              }
               onClick={() => setMenuActive(ele.id)}>
               {ele.svg}
             </a>
