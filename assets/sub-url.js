@@ -6,16 +6,24 @@ window.addEventListener(
         .captionTracks[0].baseUrl
     console.log("send in inject")
     window.postMessage({ action: "captionUrl", data: subsUrl })
-    // window.postMessage(123)
-    setInterval(() => {
-      ytplayer = document.getElementById("movie_player")
-      if (ytplayer && ytplayer.getCurrentTime && ytplayer.getCurrentTime()) {
-        window.postMessage({
-          action: "duration",
-          data: ytplayer.getCurrentTime()
-        })
+  },
+  false
+)
+
+window.addEventListener(
+  "message",
+  (e) => {
+    if (e.data.action === "adjustProgress") {
+      console.log(e.data.action, e.data.data)
+      if (!isNaN(e.data.data)) {
+        // console.log(''e.data.action, e.data.data)
+        const videoElement = document.querySelector(".video-stream")
+        if (videoElement) {
+          console.log("adjust")
+          videoElement.currentTime = e.data.data
+        }
       }
-    }, 2000)
+    }
   },
   false
 )

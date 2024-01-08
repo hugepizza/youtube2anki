@@ -1,61 +1,66 @@
-import { parseXML } from "~kits"
-import type { caption } from "~types"
+import OpenAI from "openai"
+
+import { Storage } from "@plasmohq/storage"
+
+import { addNote } from "~actions/card"
+import { deckNames } from "~actions/deck"
 
 export {}
-
-console.log(
-  "Live now; make now always the most precious time. Now will never come again."
-)
-let videoTime: number = 0
-let videoTitle = ""
-let captionData: caption[] = []
-
+const storage = new Storage({ area: "local" })
 chrome.runtime.onMessage.addListener(
   async function (message, sender, sendResponse) {
-    if (message.action === "captionsUrl") {
-      console.log("bg get captionsUrl, " + message.data)
-      await fetch(message.data, { method: "GET" })
-        .then((resp) => resp.text())
-        .then(async (xmlString) => {
-          return await parseXML(xmlString)
-        })
-        .then((texts) => {
-          captionData = texts
-        })
-        .catch((err) => console.error(err))
-    } else if (message.action === "timeChange") {
-      console.log("bg get timeChange, " + message.data)
-      videoTime = message.data
-    } else if (message.action === "videoTitle") {
-      videoTitle = message.data
-      console.log("bg get videoTitle, " + message.data)
-    } else if (message.action === "getState") {
-      sendResponse({
-        state: {
-          videoTime,
-          videoTitle,
-          captionData: findNearestCaptions(captionData, videoTime)
+    if (message.action === "AddCard") {
+      try {
+        const tag = await storage.getItem("tag")
+        let deck = await storage.getItem("deck")
+        console.log("deck1", deck)
+        let back = message.data
+        if (!deck) {
+          const decks = await deckNames()
+          if (decks.result.length === 0) {
+            throw new Error("no deck")
+          }
+          deck = decks[0]
         }
-      })
+        const aiEnable = await storage.getItem("gpt-enable")
+        console.log("deck", deck)
+        console.log("tag", tag)
+        console.log("gpt-enable", aiEnable)
+
+        if (aiEnable) {
+          back = await generateBack(message.data)
+        }
+
+        await addNote(
+          deck,
+          message.data,
+          back,
+          tag && tag.trim() != "" ? { tags: [tag] } : undefined
+        )
+        sendResponse({ result: true })
+      } catch (error) {
+        sendResponse({ result: false, reason: error.toString() })
+      }
     }
   }
 )
 
-function findNearestCaptions(
-  captions: caption[],
-  targetStart: number
-): caption[] {
-  const sortedCaptions = captions.sort((a, b) => a.start - b.start)
-  let targetIndex = sortedCaptions.findIndex(
-    (caption) => caption.start >= targetStart
-  )
-
-  if (targetIndex === -1) {
-    targetIndex = sortedCaptions.length - 1
-  }
-
-  const startIdx = Math.max(0, targetIndex - 5)
-  const endIdx = Math.min(sortedCaptions.length - 1, targetIndex + 5)
-
-  return sortedCaptions.slice(startIdx, endIdx + 1)
+async function generateBack(front: string) {
+  const sk = await storage.getItem("gpt-sk")
+  const url = await storage.getItem("gpt-url")
+  const modelName = await storage.getItem("gpt-modelName")
+  const prompt = await storage.getItem("gpt-prompt")
+  const client = new OpenAI({
+    baseURL: url || undefined,
+    apiKey: sk || "sk-",
+    dangerouslyAllowBrowser: true
+  })
+  const chatCompletion = await client.chat.completions.create({
+    messages: [
+      { role: "system", content: prompt || "translate it to Chinese" },
+      { role: "user", content: front }
+    ],
+    model: modelName || "gpt-3.5-turbo"
+  })
+  return chatCompletion.choices[0].message.content
 }
