@@ -18,6 +18,7 @@ export default function Home() {
   const [modelName, setModelName] = useState("")
   const [prompt, setPrompt] = useState("")
   const [enable, setEnable] = useState("")
+  const [audio, setAudio] = useState("")
 
   useEffect(() => {
     let pingSuccess = false
@@ -48,6 +49,7 @@ export default function Home() {
           .then((modelName) => setModelName(modelName))
         storage.getItem("gpt-prompt").then((prompt) => setPrompt(prompt))
         storage.getItem("gpt-enable").then((enable) => setEnable(enable))
+        storage.getItem("gpt-audio").then((audio) => setAudio(audio))
       })
   }, [])
   if (!ankiEnable) {
@@ -161,6 +163,19 @@ export default function Home() {
             }}
             value={prompt}></textarea>
         </div>
+        <label className="flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            className="checkbox"
+            onChange={(e) => {
+              const v = e.currentTarget.checked === true ? "true" : ""
+              setAudio(v)
+              storage.setItem("gpt-audio", v)
+            }}
+            checked={audio === "true"}
+          />
+          <span className="pl-2 select-none">create a audio file</span>
+        </label>
       </div>
     </div>
   )

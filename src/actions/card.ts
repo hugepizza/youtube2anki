@@ -1,3 +1,5 @@
+import * as crypto from "crypto"
+
 import { baseUrl } from "./_index"
 
 async function getEaseFactors(cards: string[]) {
@@ -53,8 +55,19 @@ export async function addNote(
   deck: string,
   text: string,
   back: string,
-  options?: { tags: string[] }
+  options?: { tags: string[] },
+  audioFile?: Buffer
 ) {
+  const audio = audioFile
+    ? [
+        {
+          filename: crypto.randomBytes(16).toString("base64") + ".mp3",
+          data: audioFile.toString("base64"),
+          fields: ["Front"]
+        }
+      ]
+    : undefined
+
   return await fetch(baseUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -78,7 +91,8 @@ export async function addNote(
               checkAllModels: false
             }
           },
-          tags: options?.tags || []
+          tags: options?.tags || [],
+          audio: audio
         }
       }
     })
