@@ -1,7 +1,7 @@
 {
   "name": "youtube2anki",
   "displayName": "Youtube2anki",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "An extension to synchronize youtube subtitle to Anki",
   "author": "lei",
   "scripts": {
@@ -18,6 +18,8 @@
     "plasmo": "0.84.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-hot-toast": "^2.4.1",
+    "react-toastify": "^9.1.3",
     "tailwindcss": "3.3.5",
     "use-debounce": "^10.0.0",
     "xml2js": "^0.6.2"
@@ -29,6 +31,7 @@
     "@types/react": "18.2.37",
     "@types/react-dom": "18.2.15",
     "@types/xml2js": "^0.4.14",
+    "autoprefixer": "^10.4.16",
     "daisyui": "^4.4.20",
     "postcss": "8.4.31",
     "prettier": "3.0.3",
@@ -36,7 +39,8 @@
   },
   "manifest": {
     "permissions": [
-      "storage"
+      "storage",
+      "activeTab"
     ],
     "web_accessible_resources": [
       {

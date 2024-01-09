@@ -1,9 +1,10 @@
-import cssText from "data-text:~style.css"
+import cssText from "data-text:./style.css"
 import type { PlasmoCSConfig } from "plasmo"
 import { useEffect, useState } from "react"
+import { toast, ToastContainer } from "react-toastify"
 
 import { parseXML } from "~kits"
-import type { caption } from "~types"
+import { MessageAction, type caption, type TaskResult } from "~types"
 
 export const config: PlasmoCSConfig = {
   matches: ["https://*.youtube.com/*"]
@@ -62,7 +63,30 @@ const PlasmoOverlay = () => {
         setTime(ele.currentTime)
       })
     }
+
+    chrome.runtime.onMessage.addListener(
+      async function (message, sender, sendResponse) {
+        if (message.action === MessageAction.TaskResult) {
+          console.log(MessageAction.TaskResult)
+          const result = message.data as TaskResult
+          if (result) {
+            if (result.result === "success") {
+              toast.success(
+                `task success, ${result.taskCount} tasks in progress`
+              )
+            } else {
+              toast.error(`task failed, ${result.message}`, {
+                autoClose: 3000,
+                style: { color: "red" }
+              })
+            }
+          }
+          sendResponse()
+        }
+      }
+    )
   }, [])
+
   const handleForceUpdate = async () => {
     window.location.reload()
   }
@@ -72,6 +96,14 @@ const PlasmoOverlay = () => {
       className={`fixed top-0 left-0 p-4 flex flex-row text-[24px] bg-[#FFF2D8] ${
         visible ? "" : "hidden"
       }`}>
+      <ToastContainer
+        autoClose={1000}
+        position="top-right"
+        theme="light"
+        toastClassName="bg-white text-2xl"
+        toastStyle={{ color: "black" }}
+      />
+
       <div className="flex flex-grow w-full">
         <div className="flex flex-col">
           <CaptionLines captions={caption} time={time} />
@@ -94,19 +126,17 @@ const PlasmoOverlay = () => {
                   if (text.trim() === "") {
                     return
                   }
-                  try {
-                    chrome.runtime.sendMessage(
-                      { action: "AddCard", data: text },
-                      (response) => {
-                        if (response.result) {
-                        } else {
-                          window.alert("add failed, " + response.reason)
-                        }
-                      }
-                    )
-                  } catch (error) {
-                  } finally {
-                  }
+                  chrome.runtime.sendMessage(
+                    {
+                      action: MessageAction.AddCard,
+                      data: text
+                    },
+                    (resp) => {
+                      toast.success(
+                        `task added, ${resp.count} tasks in progress`
+                      )
+                    }
+                  )
                 }}>
                 Make Card
               </button>
@@ -165,7 +195,7 @@ function CaptionLines({
             className="btn btn-square btn-sm"
             onClick={() => {
               window.postMessage({
-                action: "adjustProgress",
+                action: MessageAction.AdjustProgress,
                 data: e.start
               })
             }}>
