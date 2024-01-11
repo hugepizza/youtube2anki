@@ -1,6 +1,7 @@
 export enum MessageAction {
   TaskResult = "TaskResult",
   AddCard = "AddCard",
+  AddComplatedCard = "AddComplatedCard",
   AdjustProgress = "adjustProgress",
   CaptionUrl = "captionUrl"
 }
@@ -13,7 +14,8 @@ export type caption = {
 
 export type Task = {
   action: string
-  data: string
+  front: string
+  back?: string
 }
 export type TaskResult = {
   action: string

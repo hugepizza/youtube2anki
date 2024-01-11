@@ -18,8 +18,8 @@ dependencies:
     specifier: ^2.6.0
     version: 2.6.0(@types/react@18.2.37)(react@18.2.0)
   openai:
-    specifier: ^4.23.0
-    version: 4.23.0
+    specifier: ^4.24.3
+    version: 4.24.3
   plasmo:
     specifier: 0.84.0
     version: 0.84.0(postcss@8.4.31)(react-dom@18.2.0)(react@18.2.0)
@@ -4871,8 +4871,8 @@ packages:
       mimic-fn: 2.1.0
     dev: false
 
-  /openai@4.23.0:
-    resolution: {integrity: sha512-ey2CXh1OTcTUa0AWZWuTpgA9t5GuAG3DVU1MofCRUI7fQJij8XJ3Sr0VtgxoAE69C9wbHBMCux8Z/IQZfSwHiA==}
+  /openai@4.24.3:
+    resolution: {integrity: sha512-trXt1hwYmJTwQCzYZiKijOYslqvterDwohTncadZOTXXJh+XV4Jf9KcLP9dDRlXh0mAxGXaVzbpiNgAXa2khNQ==}
     hasBin: true
     dependencies:
       '@types/node': 18.19.3

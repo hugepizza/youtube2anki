@@ -1,9 +1,11 @@
-import OpenAI from "openai"
-
 import { Storage } from "@plasmohq/storage"
 
+import { ping } from "~actions/_index"
 import { addNote } from "~actions/card"
 import { deckNames } from "~actions/deck"
+import openAIClient from "~gpt"
+import { getAnkiConfig } from "~store/anki"
+import { gptAutoBackAudio, gptEnable, gptModel, gptPrompt } from "~store/gpt"
 import { MessageAction, type Task } from "~types"
 
 const taskQueue: Task[] = []
@@ -42,25 +44,17 @@ async function execute(task: Task) {
   switch (task.action) {
     case MessageAction.AddCard:
       try {
-        const front = task.data
-        const tag = await storage.getItem("tag")
-        const tags = tag && tag.trim() != "" ? { tags: [tag] } : undefined
-        let deck = await storage.getItem("deck")
-        let back = task.data
+        await ping()
+      } catch (err) {
+        throw new Error("AnkiConnect Add-on is not running")
+      }
+      try {
+        const { deck, tags } = await getAnkiConfig()
+        const front = task.front
+        let back = task.front
         let audioFile: Buffer | undefined
-        if (!deck) {
-          const decks = await deckNames()
-          if (decks.result.length === 0) {
-            throw new Error("no deck")
-          }
-          deck = decks[0]
-        }
-        const aiEnable = await storage.getItem("gpt-enable")
-        const audio = await storage.getItem("gpt-audio")
-        console.log("deck", deck)
-        console.log("tag", tag)
-        console.log("gpt-enable", aiEnable)
-
+        const aiEnable = await gptEnable()
+        const audio = await gptAutoBackAudio()
         if (aiEnable) {
           back = await generateBack(front)
         }
@@ -72,31 +66,27 @@ async function execute(task: Task) {
       } catch (error) {
         throw error
       }
+    case MessageAction.AddComplatedCard:
+      try {
+        const { deck, tags } = await getAnkiConfig()
+        await addNote(deck, task.front, task.back || "", tags, undefined)
+      } catch (error) {
+        throw error
+      }
   }
 }
 
-async function openAIClient() {
-  const sk = await storage.getItem("gpt-sk")
-  const url = await storage.getItem("gpt-url")
-  const client = new OpenAI({
-    baseURL: url || undefined,
-    apiKey: sk || "sk-",
-    dangerouslyAllowBrowser: true
-  })
-  return client
-}
-
 async function generateBack(front: string) {
-  const modelName = await storage.getItem("gpt-modelName")
-  const prompt = await storage.getItem("gpt-prompt")
+  const modelName = await gptModel()
+  const prompt = await gptPrompt()
   const client = await openAIClient()
   try {
     const chatCompletion = await client.chat.completions.create({
       messages: [
-        { role: "system", content: prompt || "translate it to Chinese" },
+        { role: "system", content: prompt },
         { role: "user", content: front }
       ],
-      model: modelName || "gpt-3.5-turbo"
+      model: modelName
     })
     return chatCompletion.choices[0].message.content
   } catch (error) {

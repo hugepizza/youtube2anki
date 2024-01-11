@@ -1,7 +1,7 @@
 {
   "name": "youtube2anki",
   "displayName": "Youtube2anki",
-  "version": "0.0.8",
+  "version": "0.0.10",
   "description": "An extension to synchronize youtube subtitle to Anki",
   "author": "lei",
   "scripts": {
@@ -14,7 +14,7 @@
     "@plasmohq/storage": "^1.9.0",
     "immer": "^10.0.3",
     "jotai": "^2.6.0",
-    "openai": "^4.23.0",
+    "openai": "^4.24.3",
     "plasmo": "0.84.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
@@ -39,8 +39,7 @@
   },
   "manifest": {
     "permissions": [
-      "storage",
-      "activeTab"
+      "storage"
     ],
     "web_accessible_resources": [
       {

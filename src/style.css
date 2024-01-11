@@ -1,9 +1,29 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap");
 @import url("/node_modules/react-toastify/dist/ReactToastify.css");
-@import url("/node_modules/daisyui/dist/full.css");
-@import url("/node_modules/daisyui/dist/styled.css");
-@import url("/node_modules/daisyui/dist/themes.css");
-@import url("/node_modules/daisyui/dist/unstyled.css");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+#plasmo-shadow-container {
+  --fallback-p: #491eff;
+  --fallback-pc: #d4dbff;
+  --fallback-s: #ff41c7;
+  --fallback-sc: #fff9fc;
+  --fallback-a: #00cfbd;
+  --fallback-ac: #00100d;
+  --fallback-n: #2b3440;
+  --fallback-nc: #d7dde4;
+  --fallback-b1: #ffffff;
+  --fallback-b2: #e5e6e6;
+  --fallback-b3: #e5e6e6;
+  --fallback-bc: #1f2937;
+  --fallback-in: #00b3f0;
+  --fallback-inc: #000000;
+  --fallback-su: #00ca92;
+  --fallback-suc: #000000;
+  --fallback-wa: #ffc22d;
+  --fallback-wac: #000000;
+  --fallback-er: #ff6f70;
+  --fallback-erc: #000000;
+}
