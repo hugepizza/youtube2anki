@@ -1,4 +1,6 @@
-![a](https://i.imgur.com/VEU3WlY.jpg)
+<center><img src="https://i.imgur.com/HJVHt3t.png" alt="Image" width="150"/>
+</center>
+
 
 ## Youtube2Anki: Study English by Youtube & Anki
 
