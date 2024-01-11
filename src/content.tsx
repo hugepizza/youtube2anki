@@ -1,4 +1,4 @@
-import cssText from "data-text:./style.css"
+import cssText from "data-text:~style.css"
 import type { PlasmoCSConfig } from "plasmo"
 import { useEffect, useState } from "react"
 import { toast, ToastContainer } from "react-toastify"
@@ -27,64 +27,111 @@ const PlasmoOverlay = () => {
   const [caption, setCaption] = useState<caption[]>([])
   const [time, setTime] = useState<number>(0)
   const [visible, setVisible] = useState(false)
-  const [requesting, setRequesting] = useState(false)
+  const [selectedText, setSelectedText] = useState("")
+  const [menuPosition, setMenuPosition] = useState([0, 0])
 
   useEffect(() => {
     inject()
-    window.addEventListener(
-      "message",
-      (e) => {
-        if (e.data.action === "captionUrl") {
-          console.log("get captionUrl", e.data.data)
-          fetch(e.data.data, { method: "GET" })
-            .then((resp) => resp.text())
-            .then((xmlString) => {
-              parseXML(xmlString).then((resp) => {
-                setCaption(resp)
-              })
+  }, [])
+
+  useEffect(() => {
+    const captionListiner: (e: MessageEvent<any>) => any = (
+      e: MessageEvent<any>
+    ) => {
+      if (e.data.action === "captionUrl") {
+        console.log("get captionUrl", e.data.data)
+        fetch(e.data.data, { method: "GET" })
+          .then((resp) => resp.text())
+          .then((xmlString) => {
+            parseXML(xmlString).then((resp) => {
+              setCaption(resp)
             })
-            .catch((err) => console.error(err))
+          })
+          .catch((err) => console.error(err))
+      }
+    }
+    window.addEventListener("message", captionListiner, false)
+    return () => {
+      window.removeEventListener("message", captionListiner, false)
+    }
+  }, [])
+
+  useEffect(() => {
+    const listener = async function (message, sender, sendResponse) {
+      if (message.action === MessageAction.TaskResult) {
+        console.log(MessageAction.TaskResult)
+        const result = message.data as TaskResult
+        if (result) {
+          if (result.result === "success") {
+            toast.success(`task success, ${result.taskCount} tasks in progress`)
+          } else {
+            toast.error(`task failed, ${result.message}`, {
+              autoClose: 3000,
+              style: { color: "red" }
+            })
+          }
         }
-      },
-      false
-    )
+        sendResponse()
+      }
+    }
+    chrome.runtime.onMessage.addListener(listener)
+    return () => {
+      chrome.runtime.onMessage.removeListener(listener)
+    }
+  }, [])
+
+  useEffect(() => {
+    const pauseListener: (e: Event) => any = () => {
+      setVisible(true)
+    }
+    const playListener: (e: Event) => any = () => {
+      setVisible(false)
+    }
+    const timeUpdateListener: (e: Event) => any = (e) => {
+      const ele = document.querySelector(".video-stream") as HTMLVideoElement
+      setTime(ele.currentTime)
+    }
     const videoElement = document.querySelector(
       ".video-stream"
     ) as HTMLVideoElement
     if (videoElement) {
-      videoElement.addEventListener("pause", () => {
-        setVisible(true)
-      })
-      videoElement.addEventListener("play", () => {
-        setVisible(false)
-      })
-      videoElement.addEventListener("timeupdate", (e) => {
-        const ele = document.querySelector(".video-stream") as HTMLVideoElement
-        setTime(ele.currentTime)
-      })
+      videoElement.addEventListener("pause", pauseListener)
+      videoElement.addEventListener("play", playListener)
+      videoElement.addEventListener("timeupdate", timeUpdateListener)
     }
-
-    chrome.runtime.onMessage.addListener(
-      async function (message, sender, sendResponse) {
-        if (message.action === MessageAction.TaskResult) {
-          console.log(MessageAction.TaskResult)
-          const result = message.data as TaskResult
-          if (result) {
-            if (result.result === "success") {
-              toast.success(
-                `task success, ${result.taskCount} tasks in progress`
-              )
-            } else {
-              toast.error(`task failed, ${result.message}`, {
-                autoClose: 3000,
-                style: { color: "red" }
-              })
-            }
-          }
-          sendResponse()
-        }
+    return () => {
+      if (videoElement) {
+        videoElement.removeEventListener("pause", pauseListener)
+        videoElement.removeEventListener("play", playListener)
+        videoElement.removeEventListener("timeupdate", timeUpdateListener)
       }
-    )
+    }
+  }, [])
+
+  useEffect(() => {
+    const handleSelection = (e) => {
+      const selection = document.getSelection()
+
+      const selectedText = selection.toString()
+      if (selectedText.trim()) {
+        const range = selection.getRangeAt(0)
+        console.log("x", e.clientX)
+        console.log("y", e.clientY)
+
+        const { top, left } = range.getBoundingClientRect()
+        console.log(range.getBoundingClientRect())
+        console.log(top)
+        console.log(left)
+        setSelectedText(selectedText.trim())
+        setMenuPosition([e.clientY, e.clientX])
+      } else {
+        setSelectedText("")
+      }
+    }
+    document.addEventListener("mouseup", handleSelection)
+    return () => {
+      document.removeEventListener("mouseup", handleSelection)
+    }
   }, [])
 
   const handleForceUpdate = async () => {
@@ -103,44 +150,23 @@ const PlasmoOverlay = () => {
         toastClassName="bg-white text-2xl"
         toastStyle={{ color: "black" }}
       />
+      <ContextMenu
+        selectedText={selectedText}
+        position={menuPosition}
+        removeSelectedText={() => setSelectedText("")}
+      />
 
       <div className="flex flex-grow w-full">
         <div className="flex flex-col">
           <CaptionLines captions={caption} time={time} />
           <div className="flex flex-row space-x-4 justify-end">
             <div className="flex flex-col">
-              <button
-                className="btn btn-lg text-2xl bg-[#5F6F52] text-[#A9B388]"
-                onClick={handleForceUpdate}>
+              <button className="btn" onClick={handleForceUpdate}>
                 Reload
               </button>
-              <span className="text-base">Reload after changing videos</span>
-            </div>
-            <div className="flex flex-col">
-              <button
-                className={`btn btn-lg text-2xl bg-[#5F6F52] text-[#A9B388] ${
-                  requesting ? "btn-disabled" : ""
-                }`}
-                onClick={async () => {
-                  const text = window.getSelection().toString()
-                  if (text.trim() === "") {
-                    return
-                  }
-                  chrome.runtime.sendMessage(
-                    {
-                      action: MessageAction.AddCard,
-                      data: text
-                    },
-                    (resp) => {
-                      toast.success(
-                        `task added, ${resp.count} tasks in progress`
-                      )
-                    }
-                  )
-                }}>
-                Make Card
-              </button>
-              <span className="text-base">Make a card from selected text</span>
+              <span className="text-base">
+                Reload after changing videos
+              </span>
             </div>
           </div>
         </div>
@@ -149,16 +175,51 @@ const PlasmoOverlay = () => {
   )
 }
 
-function Fetching({}) {
+function ContextMenu({
+  selectedText,
+  position,
+  removeSelectedText
+}: {
+  selectedText: string
+  position: number[]
+  removeSelectedText: () => void
+}) {
+  if (!selectedText) {
+    return <></>
+  }
   return (
-    <>
-      <span className=" items-center loading loading-dots loading-lg"></span>
-      <span>Loading the currently playing video...</span>
-      <span className="text-sm text">
-        If subtitles and title are not consistent, attempt to reopen the plugin
-        popup.
-      </span>
-    </>
+    <div
+      className="join absolute bg-white"
+      style={{ top: position[0], left: position[1] }}>
+      <div className="tooltip " data-tip="make a card">
+        <button
+          className="btn border-none btn-lg join-item hover:bg-gray-200"
+          onClick={() => {
+            chrome.runtime.sendMessage(
+              {
+                action: MessageAction.AddCard,
+                data: selectedText
+              },
+              (resp) => {
+                toast.success(`task added, ${resp.count} tasks in progress`)
+              }
+            )
+            document.getSelection().removeAllRanges()
+            removeSelectedText()
+          }}>
+          card
+        </button>
+      </div>
+
+      <button
+        className="btn border-none btn-lg join-item hover:bg-gray-200"
+        onClick={() => {
+          removeSelectedText()
+          document.getSelection().removeAllRanges()
+        }}>
+        trans
+      </button>
+    </div>
   )
 }
 
@@ -176,7 +237,7 @@ function CaptionLines({
   const currentIdx = showCaptions.findLastIndex((e) => e.start <= time)
 
   return (
-    <div className="flex flex-col w-full space-y-1 bg-secondary p-2 rounded-lg my-2">
+    <div className="flex flex-col w-full space-y-1 p-2 rounded-lg my-2">
       {Math.floor(showCaptions[0].start / 60).toFixed(0)}
       {":"}
       {(showCaptions[0].start % 60).toString().padStart(2, "0")}
@@ -240,17 +301,6 @@ function findNearestCaptions(
   const endIdx = Math.min(sortedCaptions.length - 1, targetIndex + 5)
 
   return sortedCaptions.slice(startIdx, endIdx + 1)
-}
-
-async function refresh() {
-  // const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
-  // chrome.scripting.executeScript({
-  //   target: { tabId: tab.id },
-  //   func: () => {
-  //     window.location.reload()
-  //   }
-  // })
-  window.location.reload()
 }
 
 export default PlasmoOverlay

@@ -4,6 +4,6 @@ module.exports = {
   darkMode: "media",
   plugins: [require("daisyui")],
   daisyui: {
-    themes: ["retro"]
+    themes: ["light"]
   }
 }

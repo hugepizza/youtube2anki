@@ -1,6 +1,9 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap");
 @import url("/node_modules/react-toastify/dist/ReactToastify.css");
-
+@import url("/node_modules/daisyui/dist/full.css");
+@import url("/node_modules/daisyui/dist/styled.css");
+@import url("/node_modules/daisyui/dist/themes.css");
+@import url("/node_modules/daisyui/dist/unstyled.css");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
