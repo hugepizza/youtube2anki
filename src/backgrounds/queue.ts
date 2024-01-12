@@ -2,14 +2,12 @@ import { Storage } from "@plasmohq/storage"
 
 import { ping } from "~actions/_index"
 import { addNote } from "~actions/card"
-import { deckNames } from "~actions/deck"
 import openAIClient from "~gpt"
 import { getAnkiConfig } from "~store/anki"
 import { gptAutoBackAudio, gptEnable, gptModel, gptPrompt } from "~store/gpt"
 import { MessageAction, type Task } from "~types"
 
 const taskQueue: Task[] = []
-const storage = new Storage({ area: "local" })
 setInterval(processTasks, 1000)
 
 let inprogress = false
@@ -41,35 +39,49 @@ async function processTasks() {
 }
 
 async function execute(task: Task) {
+  try {
+    await ping()
+  } catch (err) {
+    throw new Error("AnkiConnect Add-on is not running")
+  }
   switch (task.action) {
     case MessageAction.AddCard:
       try {
-        await ping()
-      } catch (err) {
-        throw new Error("AnkiConnect Add-on is not running")
-      }
-      try {
-        const { deck, tags } = await getAnkiConfig()
+        const { deck, tag } = await getAnkiConfig()
         const front = task.front
         let back = task.front
         let audioFile: Buffer | undefined
         const aiEnable = await gptEnable()
-        const audio = await gptAutoBackAudio()
+        const audioEnable = await gptAutoBackAudio()
         if (aiEnable) {
           back = await generateBack(front)
         }
-        if (audio) {
+        if (aiEnable && audioEnable) {
           const bf = await generateAudioMedia(front)
           audioFile = Buffer.from(bf)
         }
-        await addNote(deck, front, back, tags, audioFile)
+        await addNote(deck, front, back, { tags: [tag] }, audioFile)
+        break
       } catch (error) {
         throw error
       }
     case MessageAction.AddComplatedCard:
       try {
-        const { deck, tags } = await getAnkiConfig()
-        await addNote(deck, task.front, task.back || "", tags, undefined)
+        const { deck, tag } = await getAnkiConfig()
+        const audioEnable = await gptAutoBackAudio()
+        let audioFile: Buffer | undefined
+        if (audioEnable) {
+          const bf = await generateAudioMedia(task.front)
+          audioFile = Buffer.from(bf)
+        }
+        await addNote(
+          deck,
+          task.front,
+          task.back || "",
+          { tags: [tag] },
+          audioFile
+        )
+        break
       } catch (error) {
         throw error
       }

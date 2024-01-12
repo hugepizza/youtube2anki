@@ -68,6 +68,8 @@ export async function addNote(
       ]
     : undefined
 
+  const tags: string[] = options?.tags?.filter((e) => e.trim() != "") || []
+
   return await fetch(baseUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -91,7 +93,7 @@ export async function addNote(
               checkAllModels: false
             }
           },
-          tags: options?.tags || [],
+          tags: tags,
           audio: audio
         }
       }

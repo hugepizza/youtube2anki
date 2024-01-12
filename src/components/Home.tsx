@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react"
 
-import { Storage } from "@plasmohq/storage"
-
 import { ping } from "~actions/_index"
 import { deckNames } from "~actions/deck"
+import { getAnkiConfig, setAnkiDeck, setAnkiTag } from "~store/anki"
 import {
   gptAutoBackAudio,
   gptBaseUrl,
@@ -20,8 +19,6 @@ import {
   setGPTSecretKey,
   setGPTTranslatePrompt
 } from "~store/gpt"
-
-const storage = new Storage({ area: "local" })
 
 export default function Home() {
   const [decks, setDecks] = useState<string[]>([])
@@ -54,10 +51,10 @@ export default function Home() {
             setDecks(resp.result)
           })
         }
-        storage.getItem("deck").then((deck) => {
+        getAnkiConfig().then(({ deck, tag }) => {
           setDeck(deck)
+          setTag(tag)
         })
-        storage.getItem("tag").then((tag) => setTag(tag))
 
         gptSecretKey().then((sk) => setSk(sk))
         gptBaseUrl().then((url) => setUrl(url))
@@ -89,7 +86,7 @@ export default function Home() {
           <select
             className="select select-bordered w-full select-sm"
             onChange={(e) => {
-              storage.setItem("deck", e.target.value)
+              setAnkiDeck(e.target.value)
               setDeck(e.target.value)
             }}
             value={deck}>
@@ -106,7 +103,7 @@ export default function Home() {
               placeholder={tag}
               value={tag}
               onChange={(e) => {
-                storage.setItem("tag", e.currentTarget.value)
+                setAnkiTag(e.currentTarget.value)
                 setTag(e.currentTarget.value)
               }}
             />
@@ -139,7 +136,7 @@ export default function Home() {
           value={sk}></input>
       </div>
       <div className="flex flex-col">
-        <span className="text-gray-400 text-sm">Modal</span>
+        <span className="text-gray-400 text-sm">Model</span>
         <select
           className="select select-bordered w-full select-sm"
           onChange={(e) => {
