@@ -1,18 +1,16 @@
 {
   "extends": "plasmo/templates/tsconfig.base",
-  "exclude": [
-    "node_modules"
-  ],
+  "exclude": ["node_modules"],
   "include": [
     ".plasmo/index.d.ts",
     "./**/*.ts",
-    "./**/*.tsx"
-, "src/js/inject.js"  ],
+    "./**/*.tsx",
+    "src/js/inject.js"
+  ],
   "compilerOptions": {
     "paths": {
-      "~*": [
-        "./src/*"
-      ]
+      "~*": ["./src/*"],
+      "@/*": ["./src/*"]
     },
     "baseUrl": "."
   }

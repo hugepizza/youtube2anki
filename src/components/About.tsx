@@ -2,35 +2,82 @@ export default function About() {
   return (
     <div className="flex flex-col w-full">
       <div className="hero bg-base-200 p-4 w-full">
-        <div className="hero-content text-center">
-          <div className="max-w-md">
-            <h1 className="text-3xl font-bold">Hello there</h1>
-            <p className="py-2">
-              {"youtube2anki is an open source tool for learning English."}
-              <br></br>
-              {
-                "It allows you to quickly synchronize sentences of interest from YouTube subtitles to Anki cards."
-              }
-              <br></br>
-              Before using youtube2anki, you need to install the{" "}
-              <a
-                className="link link-primary"
-                href="https://ankiweb.net/shared/info/2055492159">
-                Anki-Connect Add-on
-              </a>
-              .
-            </p>
+        <div className="space-y-6">
+          <blockquote className="border-l-4 border-blue-500 bg-blue-50 p-4 italic text-gray-700">
+            <p className="text-lg">"Listening before reading"</p>
+            <footer className="mt-2 text-sm not-italic text-gray-500">
+              — Paul Nation, Language Learning Expert
+            </footer>
+          </blockquote>
+
+          <div>
+            <h4 className="mb-4 text-xl font-semibold text-gray-800">
+              Key Features:
+            </h4>
+            <ul className="space-y-3">
+              <li className="flex items-start">
+                <svg
+                  className="mr-2 h-5 w-5 text-blue-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span className="text-gray-700">
+                  On-demand subtitles (hidden by default)
+                </span>
+              </li>
+              <li className="flex items-start">
+                <svg
+                  className="mr-2 h-5 w-5 text-blue-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span className="text-gray-700">
+                  One-click replay of specific phrases
+                </span>
+              </li>
+              <li className="flex items-start">
+                <svg
+                  className="mr-2 h-5 w-5 text-blue-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span className="text-gray-700">
+                  Works seamlessly with YouTube
+                </span>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
-      <footer className="footer footer-center p-4 bg-base-300 text-base-content">
+      <footer className="w-full flex items-end p-4 bg-base-300 text-base-content">
         <aside>
           <a
             target="_blank"
             href="https://github.com/hugepizza/youtube2anki"
-            className="inline-flex items-center justify-center space-x-2">
+            className="w-full inline-flex items-center justify-center space-x-2">
             <svg
-              className="w-8 h-8"
+              className="w-5 h-5"
               viewBox="0 0 98 96"
               xmlns="http://www.w3.org/2000/svg">
               <path

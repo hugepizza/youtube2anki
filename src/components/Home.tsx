@@ -1,3 +1,4 @@
+import { Zap } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import { ping } from "~actions/_index"
@@ -67,14 +68,9 @@ export default function Home() {
   }, [])
   if (!ankiEnable) {
     return (
-      <div className="w-full flex flex-col items-center justify-center">
-        <span>Anki-Connect Add-on is not working on localhost:8765</span>
-        <a
-          href="https://foosoft.net/projects/anki-connect/"
-          target="_blank"
-          className="link-primary text-sm">
-          What is Anki-Connect Add-on?
-        </a>
+      <div className="w-full flex flex-row items-center justify-center gap-2">
+        <Zap className="w-4 h-4" />
+        <span>AI Powered Translation is coming soon!</span>
       </div>
     )
   }

@@ -1,29 +1,43 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap");
-@import url("/node_modules/react-toastify/dist/ReactToastify.css");
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-#plasmo-shadow-container {
-  --fallback-p: #491eff;
-  --fallback-pc: #d4dbff;
-  --fallback-s: #ff41c7;
-  --fallback-sc: #fff9fc;
-  --fallback-a: #00cfbd;
-  --fallback-ac: #00100d;
-  --fallback-n: #2b3440;
-  --fallback-nc: #d7dde4;
-  --fallback-b1: #ffffff;
-  --fallback-b2: #e5e6e6;
-  --fallback-b3: #e5e6e6;
-  --fallback-bc: #1f2937;
-  --fallback-in: #00b3f0;
-  --fallback-inc: #000000;
-  --fallback-su: #00ca92;
-  --fallback-suc: #000000;
-  --fallback-wa: #ffc22d;
-  --fallback-wac: #000000;
-  --fallback-er: #ff6f70;
-  --fallback-erc: #000000;
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+  --background: 0 0% 100%;
+  --foreground: 240 10% 3.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 3.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 3.9%;
+  --primary: 352 100% 57%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 240 4.8% 95.9%;
+  --secondary-foreground: 240 5.9% 10%;
+  --muted: 240 4.8% 95.9%;
+  --muted-foreground: 240 3.8% 46.1%;
+  --accent: 240 4.8% 95.9%;
+  --accent-foreground: 240 5.9% 10%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 5.9% 90%;
+  --input: 240 5.9% 90%;
+  --ring: 240 10% 3.9%;
+  --chart-1: 12 76% 61%;
+  --chart-2: 173 58% 39%;
+  --chart-3: 197 37% 24%;
+  --chart-4: 43 74% 66%;
+  --chart-5: 27 87% 67%;
+  --radius: 0.5rem;
+  --sidebar-background: 0 0% 98%;
+  --sidebar-foreground: 240 5.3% 26.1%;
+  --sidebar-primary: 240 5.9% 10%;
+  --sidebar-primary-foreground: 0 0% 98%;
+  --sidebar-accent: 240 4.8% 95.9%;
+  --sidebar-accent-foreground: 240 5.9% 10%;
+  --sidebar-border: 220 13% 91%;
+  --sidebar-ring: 217.2 91.2% 59.8%;
+  --header-height: 64px;
 }
