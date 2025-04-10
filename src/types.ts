@@ -3,7 +3,7 @@ export enum MessageAction {
   AddCard = "AddCard",
   AddComplatedCard = "AddComplatedCard",
   AdjustProgress = "adjustProgress",
-  CaptionUrl = "captionUrl"
+  CaptionUrls = "captionUrls"
 }
 
 export type caption = {
