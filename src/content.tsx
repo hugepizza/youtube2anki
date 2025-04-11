@@ -1,5 +1,5 @@
 import cssText from "data-text:~style.css"
-import { Languages, RefreshCcw } from "lucide-react"
+import { IdCard, Import, Languages, RefreshCcw } from "lucide-react"
 import type { PlasmoCSConfig } from "plasmo"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { toast, ToastContainer } from "react-toastify"
@@ -16,7 +16,7 @@ import {
 import openAIClient from "~gpt"
 import { parseXML } from "~kits"
 import { cn } from "~lib/utils"
-import { gptModel, gptTranslatePrompt } from "~store/gpt"
+import { gptEnable, gptModel, gptPrompt, gptTranslatePrompt } from "~store/gpt"
 import { MessageAction, type caption, type TaskResult } from "~types"
 
 const storage = new Storage({ area: "local" })
@@ -41,22 +41,39 @@ const PlasmoOverlay = () => {
   const [caption, setCaption] = useState<caption[]>([])
   const [time, setTime] = useState<number>(0)
   const [visible, setVisible] = useState(false)
+  const [gptEnableState, setGPTEnableState] = useState(false)
   const [selectedText, setSelectedText] = useState("")
   const [translatedText, setTranslatedText] = useState("")
 
   const [translationVisible, setTranslationVisible] = useState(false)
+  const [makeCardVisible, setMakeCardVisible] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const [translateStatus, setTranslateStatus] = useState<
     "done" | "requesting" | "error"
   >("done")
+  useEffect(() => {
+    gptEnable().then((enable) => {
+      setGPTEnableState(enable)
+    })
+  }, [])
 
   const translate = useCallback(async (text: string) => {
     setTranslateStatus("requesting")
+    const modelName = await gptModel()
+    const prompt = await gptPrompt()
+    const client = await openAIClient()
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const chatCompletion = await client.chat.completions.create({
+        messages: [
+          { role: "system", content: prompt },
+          { role: "user", content: text }
+        ],
+        model: modelName
+      })
+      const result = chatCompletion.choices[0].message.content
       setTranslateStatus("done")
-      setTranslatedText(text + " hello")
-      return text + " hello"
+      setTranslatedText(result)
+      return result
     } catch (err) {
       setTranslateStatus("error")
       return text
@@ -110,9 +127,15 @@ const PlasmoOverlay = () => {
         const result = message.data as TaskResult
         if (result) {
           if (result.result === "success") {
-            toast.success(`task success, ${result.taskCount} tasks in progress`)
+            toast.success(
+              `Card task success, ${
+                result.taskCount > 0
+                  ? `${result.taskCount} cards in progress`
+                  : "no cards in progress"
+              } `
+            )
           } else {
-            toast.error(`task failed, ${result.message}`, {
+            toast.error(`Card task failed, ${result.message}`, {
               autoClose: 3000,
               style: { color: "red" }
             })
@@ -183,6 +206,18 @@ const PlasmoOverlay = () => {
     window.location.reload()
   }
 
+  const handleMakeCard = async () => {
+    chrome.runtime.sendMessage(
+      {
+        action: MessageAction.AddCard,
+        data: selectedText
+      },
+      (resp) => {
+        toast.success(`Task added, ${resp.count} cards in progress`)
+      }
+    )
+    document.getSelection().removeAllRanges()
+  }
   return (
     <div
       ref={containerRef}
@@ -207,18 +242,42 @@ const PlasmoOverlay = () => {
             time={time}
           />
           <div className="flex flex-row space-x-4 justify-between">
-            <Button
-              className="opacity-0"
-              variant="ghost"
-              onClick={async () => {
-                setTranslationVisible(true)
-                await translate(selectedText)
-              }}>
-              <Languages
-                className={`${caption.length === 0 ? "opacity-0" : ""}`}
-                style={{ width: "16px", height: "16px" }}
-              />
-            </Button>
+            <div className="flex flex-row gap-2">
+              {gptEnableState && (
+                <Button
+                  // className="opacity-0"
+                  variant="ghost"
+                  onClick={async () => {
+                    setTranslationVisible(true)
+                    await translate(selectedText)
+                  }}>
+                  <Languages
+                    className={`${caption.length === 0 ? "opacity-0" : ""}`}
+                    style={{ width: "16px", height: "16px" }}
+                  />
+                </Button>
+              )}
+              <TooltipProvider delayDuration={50}>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Button
+                      // className="opacity-0"
+                      variant="ghost"
+                      onClick={async () => {
+                        await handleMakeCard()
+                      }}>
+                      <Import
+                        className={`${caption.length === 0 ? "opacity-0" : ""}`}
+                        style={{ width: "16px", height: "16px" }}
+                      />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="text-lg">
+                    Add a card to Anki
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             <TooltipProvider delayDuration={50}>
               <Tooltip>
                 <TooltipTrigger>

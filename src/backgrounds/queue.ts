@@ -1,5 +1,3 @@
-import { Storage } from "@plasmohq/storage"
-
 import { ping } from "~actions/_index"
 import { addNote } from "~actions/card"
 import openAIClient from "~gpt"
@@ -25,6 +23,9 @@ async function processTasks() {
   if (!inprogress && taskQueue.length > 0) {
     console.log("processTasks get")
     const task = taskQueue.shift()
+    if (!task) {
+      return
+    }
     try {
       inprogress = true
       await execute(task)
