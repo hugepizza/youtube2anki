@@ -1,10 +1,12 @@
+import { Home } from "lucide-react"
+
 import "./style.css"
 
 import { useAtom } from "jotai"
 
 import About from "~components/About"
-import Home from "~components/Home"
 import { Menu, menuActiveAtom } from "~components/Menu"
+import Setting from "~components/Setting"
 
 function IndexPopup() {
   const [menuActive] = useAtom(menuActiveAtom)
@@ -12,8 +14,9 @@ function IndexPopup() {
     <div className="w-[600px] max-w-[600px] flex flex-row text-base p-2 shadow-lg">
       <Menu />
       <div className="flex flex-grow w-full">
-        {(!menuActive || menuActive === "home") && <Home />}
+        {(menuActive === "home" || menuActive === null) && <Home />}
         {menuActive === "about" && <About />}
+        {menuActive === "setting" && <Setting />}
       </div>
     </div>
   )

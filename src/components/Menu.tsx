@@ -1,6 +1,6 @@
 import { useAtom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
-import { Home, Info } from "lucide-react"
+import { Home, Info, Settings } from "lucide-react"
 
 import { Button } from "./ui/button"
 
@@ -15,8 +15,8 @@ export const menuActiveAtom = atomWithStorage(
 
 const menuItems = [
   {
-    id: "home",
-    svg: <Home className="w-6 h-6" strokeWidth={2} />
+    id: "setting",
+    svg: <Settings className="w-6 h-6" strokeWidth={2} />
   },
   {
     id: "about",
