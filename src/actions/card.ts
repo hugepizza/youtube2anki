@@ -58,6 +58,13 @@ export async function addNote(
   options?: { tags: string[] },
   audioFile?: Buffer
 ) {
+  if (!deck) {
+    throw new Error("deck is required")
+  }
+  if (!text) {
+    throw new Error("text is required")
+  }
+
   const audio = audioFile
     ? [
         {
@@ -68,7 +75,7 @@ export async function addNote(
       ]
     : undefined
 
-  const tags: string[] = options?.tags?.filter((e) => e.trim() != "") || []
+  const tags: string[] = options?.tags?.filter((e) => e?.trim() != "") || []
 
   return await fetch(baseUrl, {
     method: "POST",

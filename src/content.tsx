@@ -39,10 +39,10 @@ function inject() {
 
 const PlasmoOverlay = () => {
   const [caption, setCaption] = useState<caption[]>([])
+  const [secondaryCaption, setSecondaryCaption] = useState<caption[]>([])
   const [time, setTime] = useState<number>(0)
   const [visible, setVisible] = useState(false)
   const [gptEnableState, setGPTEnableState] = useState(false)
-  const [selectedText, setSelectedText] = useState("")
   const [translatedText, setTranslatedText] = useState("")
 
   const [translationVisible, setTranslationVisible] = useState(false)
@@ -96,15 +96,17 @@ const PlasmoOverlay = () => {
         if (e.data.data.length === 0) {
           return
         }
-        let enUrl = e.data.data.find((url) => {
+        console.log("captionUrls triggered", e.data.data)
+        let captionUrl = e.data.data.find((url) => {
           const urlObj = new URL(url)
           const lang = urlObj.searchParams.get("lang")
           return lang === "en"
         })
-        if (!enUrl) {
-          enUrl = e.data.data[0]
+        if (!captionUrl) {
+          captionUrl = e.data.data[0]
         }
-        fetch(enUrl, { method: "GET" })
+
+        fetch(captionUrl, { method: "GET" })
           .then((resp) => resp.text())
           .then((xmlString) => {
             parseXML(xmlString).then((resp) => {
@@ -112,6 +114,22 @@ const PlasmoOverlay = () => {
             })
           })
           .catch((err) => console.error(err))
+
+        let secondaryCaptionUrl = e.data.data.find((url) => {
+          const urlObj = new URL(url)
+          const lang = urlObj.searchParams.get("lang")
+          return lang === "zh-CN"
+        })
+        if (secondaryCaptionUrl) {
+          fetch(secondaryCaptionUrl, { method: "GET" })
+            .then((resp) => resp.text())
+            .then((xmlString) => {
+              parseXML(xmlString).then((resp) => {
+                setSecondaryCaption(resp)
+              })
+            })
+            .catch((err) => console.error(err))
+        }
       }
     }
     window.addEventListener("message", captionListiner, false)
@@ -178,39 +196,16 @@ const PlasmoOverlay = () => {
     }
   }, [])
 
-  useEffect(() => {
-    const handleSelection = (e) => {
-      const selection = document.getSelection()
-      const selectedText = selection.toString()
-      setTranslationVisible(false)
-      if (selectedText.trim()) {
-        const range = selection.getRangeAt(0)
-        console.log("x", e.clientX)
-        console.log("y", e.clientY)
-
-        const { top, left } = range.getBoundingClientRect()
-        console.log(range.getBoundingClientRect())
-        console.log(top)
-        console.log(left)
-        setSelectedText(selectedText.trim())
-        setTranslatedText("")
-      }
-    }
-    document.addEventListener("mouseup", handleSelection)
-    return () => {
-      document.removeEventListener("mouseup", handleSelection)
-    }
-  }, [])
-
   const handleForceUpdate = async () => {
     window.location.reload()
   }
 
-  const handleMakeCard = async () => {
+  const handleMakeCard = async (text: string) => {
+    console.log("card text", text)
     chrome.runtime.sendMessage(
       {
         action: MessageAction.AddCard,
-        data: selectedText
+        data: text
       },
       (resp) => {
         toast.success(`Task added, ${resp.count} cards in progress`)
@@ -236,11 +231,7 @@ const PlasmoOverlay = () => {
 
       <div className="flex flex-grow w-full">
         <div className="flex flex-col w-full">
-          <CaptionLines
-            selectedText={selectedText}
-            captions={caption}
-            time={time}
-          />
+          <CaptionLines captions={caption} time={time} />
           <div className="flex flex-row space-x-4 justify-between">
             <div className="flex flex-row gap-2">
               {gptEnableState && (
@@ -249,7 +240,8 @@ const PlasmoOverlay = () => {
                   variant="ghost"
                   onClick={async () => {
                     setTranslationVisible(true)
-                    await translate(selectedText)
+                    const text = document.getSelection().toString()
+                    await translate(text)
                   }}>
                   <Languages
                     className={`${caption.length === 0 ? "opacity-0" : ""}`}
@@ -263,8 +255,9 @@ const PlasmoOverlay = () => {
                     <Button
                       // className="opacity-0"
                       variant="ghost"
-                      onClick={async () => {
-                        await handleMakeCard()
+                      onClick={async (e) => {
+                        const text = document.getSelection().toString()
+                        await handleMakeCard(text)
                       }}>
                       <Import
                         className={`${caption.length === 0 ? "opacity-0" : ""}`}
@@ -354,11 +347,9 @@ function TranslationSection({
   )
 }
 function CaptionLines({
-  selectedText,
   captions,
   time
 }: {
-  selectedText: string
   captions: caption[]
   time: number
 }) {
