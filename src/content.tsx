@@ -96,7 +96,6 @@ const PlasmoOverlay = () => {
         if (e.data.data.length === 0) {
           return
         }
-        console.log("captionUrls triggered", e.data.data)
         let captionUrl = e.data.data.find((url) => {
           const urlObj = new URL(url)
           const lang = urlObj.searchParams.get("lang")
@@ -105,11 +104,13 @@ const PlasmoOverlay = () => {
         if (!captionUrl) {
           captionUrl = e.data.data[0]
         }
+        captionUrl = captionUrl + "&c=WEB&&potc=1&pot=MlNZdgezWG_loVlKUteXxvje3Y0PyyDICvTmDmCJ-kuzyV5hkfPtzGIuwitja0rut_ACpqYxVVjtS0fuBKy3TJBRGTX4yhTELQ-Bi4lKM-tlLQ9qRQ%3D%3D&"
 
         fetch(captionUrl, { method: "GET" })
-          .then((resp) => resp.text())
+          .then(async (resp) => { const text = await resp.text(); console.log("text", text); return text })
           .then((xmlString) => {
             parseXML(xmlString).then((resp) => {
+              console.log("set caption", resp)
               setCaption(resp)
             })
           })
@@ -146,10 +147,9 @@ const PlasmoOverlay = () => {
         if (result) {
           if (result.result === "success") {
             toast.success(
-              `Card task success, ${
-                result.taskCount > 0
-                  ? `${result.taskCount} cards in progress`
-                  : "no cards in progress"
+              `Card task success, ${result.taskCount > 0
+                ? `${result.taskCount} cards in progress`
+                : "no cards in progress"
               } `
             )
           } else {
@@ -276,9 +276,8 @@ const PlasmoOverlay = () => {
                 <TooltipTrigger>
                   <Button
                     variant="ghost"
-                    className={`${
-                      caption.length > 0 ? "" : "hover:bg-red-300"
-                    }`}
+                    className={`${caption.length > 0 ? "" : "hover:bg-red-300"
+                      }`}
                     onClick={handleForceUpdate}>
                     <RefreshCcw
                       style={{ color: "red", width: "16px", height: "16px" }}
@@ -335,11 +334,10 @@ function TranslationSection({
   }
   return (
     <div
-      className={`flex flex-col w-full transition-all duration-300 rounded-lg mt-2 ${
-        visible
-          ? "max-h-[500px] opacity-100"
-          : "max-h-0 opacity-0 overflow-hidden"
-      }`}>
+      className={`flex flex-col w-full transition-all duration-300 rounded-lg mt-2 ${visible
+        ? "max-h-[500px] opacity-100"
+        : "max-h-0 opacity-0 overflow-hidden"
+        }`}>
       <div className="py-2 px-4 bg-gray-100 rounded-lg w-full text-2xl break-words whitespace-normal max-w-full overflow-x-hidden">
         {text}
       </div>
@@ -383,9 +381,8 @@ function CaptionLines({
       {showCaptions.map((e, i) => (
         <div key={i} className="flex flex-row w-full space-x-2">
           <button
-            className={`bg-white hover:text-red-500 hover:shadow-lg hover:bg-gray-100 rounded-full p-2 duration-100 self-start ${
-              i === currentIdx ? "text-red-500" : ""
-            }`}
+            className={`bg-white hover:text-red-500 hover:shadow-lg hover:bg-gray-100 rounded-full p-2 duration-100 self-start ${i === currentIdx ? "text-red-500" : ""
+              }`}
             onClick={() => {
               window.postMessage({
                 action: MessageAction.AdjustProgress,
